@@ -109,6 +109,117 @@ def find_next_high_tide(tides: List[Dict]) -> Optional[int]:
     return None
 
 
+def get_current_tide_status(tides: List[Dict]) -> Optional[Dict]:
+    """Calculate the current tide status based on surrounding tides."""
+    if len(tides) < 2:
+        return None
+    
+    now = datetime.now()
+    
+    # Find the two tides we're between (previous and next)
+    prev_tide = None
+    next_tide = None
+    
+    for i, tide in enumerate(tides):
+        if tide["time"] is None:
+            continue
+        
+        if tide["time"] <= now:
+            prev_tide = tide
+        elif tide["time"] > now and next_tide is None:
+            next_tide = tide
+            break
+    
+    # If we don't have both surrounding tides, we can't calculate
+    if prev_tide is None or next_tide is None:
+        return None
+    
+    # Calculate progress between the two tides
+    total_duration = (next_tide["time"] - prev_tide["time"]).total_seconds()
+    elapsed = (now - prev_tide["time"]).total_seconds()
+    progress = elapsed / total_duration if total_duration > 0 else 0
+    
+    # Parse heights as floats
+    try:
+        prev_height = float(prev_tide["height"].replace("m", ""))
+        next_height = float(next_tide["height"].replace("m", ""))
+    except (ValueError, AttributeError):
+        return None
+    
+    # Calculate current estimated height (simple linear interpolation)
+    current_height = prev_height + (next_height - prev_height) * progress
+    
+    # Determine if rising or falling
+    is_rising = next_tide["type"] == "HIGH"
+    direction = "Rising" if is_rising else "Falling"
+    
+    # Calculate time until next tide
+    time_remaining = next_tide["time"] - now
+    hours_remaining = time_remaining.total_seconds() / 3600
+    
+    return {
+        "current_height": current_height,
+        "direction": direction,
+        "is_rising": is_rising,
+        "progress": progress,
+        "prev_tide": prev_tide,
+        "next_tide": next_tide,
+        "hours_remaining": hours_remaining
+    }
+
+
+def display_current_tide(tides: List[Dict]):
+    """Display the current tide status."""
+    status = get_current_tide_status(tides)
+    
+    if status is None:
+        return
+    
+    # Build a visual tide indicator
+    progress = status["progress"]
+    bar_width = 20
+    filled = int(progress * bar_width)
+    
+    if status["is_rising"]:
+        # Rising tide: low → high
+        bar = "░" * filled + "▓" + "░" * (bar_width - filled - 1)
+        direction_arrow = "↑"
+        direction_color = "green"
+    else:
+        # Falling tide: high → low  
+        bar = "░" * filled + "▓" + "░" * (bar_width - filled - 1)
+        direction_arrow = "↓"
+        direction_color = "blue"
+    
+    # Format time remaining
+    hours = status["hours_remaining"]
+    if hours >= 1:
+        time_str = f"{int(hours)}h {int((hours % 1) * 60)}m"
+    else:
+        time_str = f"{int(hours * 60)}m"
+    
+    # Create the current tide display
+    current_text = Text()
+    current_text.append("  Current: ", style="bold")
+    current_text.append(f"{status['current_height']:.2f}m ", style="bold cyan")
+    current_text.append(f"{direction_arrow} {status['direction']} ", style=f"bold {direction_color}")
+    
+    progress_text = Text()
+    progress_text.append("  ", style="")
+    progress_text.append(f"{status['prev_tide']['type'].lower()} ", style="dim")
+    progress_text.append(f"[{bar}]", style="cyan")
+    progress_text.append(f" {status['next_tide']['type'].lower()}", style="dim")
+    progress_text.append(f"  ({time_str} to {status['next_tide']['type'].lower()})", style="dim")
+    
+    console.print()
+    console.print(Panel(
+        Text.assemble(current_text, "\n", progress_text),
+        title=Text("🌊 Right Now", style="bold yellow"),
+        border_style="yellow",
+        padding=(0, 1)
+    ))
+
+
 def display_tides(tides: List[Dict]):
     """Display tide information with the next high tide highlighted."""
     if not tides:
@@ -118,6 +229,9 @@ def display_tides(tides: List[Dict]):
     # Get current date
     now = datetime.now()
     date_str = now.strftime("%A, %b %d %Y")
+    
+    # Display current tide status first
+    display_current_tide(tides)
     
     # Find next high tide
     next_high_idx = find_next_high_tide(tides)
