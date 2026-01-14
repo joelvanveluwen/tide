@@ -4,6 +4,7 @@ A simple Python CLI tool to check tide times for Moonee Beach, NSW, Australia.
 
 ## Features
 
+- **Current tide status** - shows estimated height, rising/falling direction, and time to next tide
 - Displays all of today's tide times and heights
 - Highlights the next upcoming high tide
 - Clean, colorful terminal output
@@ -66,21 +67,23 @@ tide
 ```
 Fetching tide data for Moonee Beach...
 
-╭─ Moonee Beach Tides - Monday, Jan 13 2026 ─╮
-│                                             │
-│     5:16 AM   HIGH   1.36m                  │
-│    11:47 AM   low    0.64m                  │
-│  →  5:02 PM   HIGH   1.01m   ← NEXT HIGH   │
-│    11:01 PM   low    0.44m                  │
-│                                             │
-╰─────────────────────────────────────────────╯
+╭──────────────────── 🌊 Right Now ────────────────────╮
+│   Current: 1.11m ↓ Falling                           │
+│   high [░░░░░░░▓░░░░░░░░░░░░] low  (4h 9m to low)    │
+╰──────────────────────────────────────────────────────╯
 
-Next High Tide: 5:02 PM (1.01m)
+╭───────── Moonee Beach Tides - Thursday, Jan 15 2026 ─────────╮
+│       6:54 am     HIGH    1.52m                               │
+│       1:42 pm     low     0.46m                               │
+│  →    7:07 pm     HIGH    1.03m     ← NEXT HIGH               │
+╰───────────────────────────────────────────────────────────────╯
+
+Next High Tide: 7:07 pm (1.03m)
 ```
 
 ## Data Source
 
-Tide data is scraped from [WillyWeather](https://tides.willyweather.com.au/nsw/mid-north-coast/moonee-beach.html).
+Tide data is scraped from [WillyWeather](https://tides.willyweather.com.au/nsw/mid-north-coast/moonee-beach.html). But to be fair they just take the data from gov funded BoM.
 
 ## Requirements
 
